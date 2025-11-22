@@ -61,6 +61,10 @@ pub mod review_format;
 pub use codex_protocol::protocol::InitialHistory;
 pub use conversation_manager::ConversationManager;
 pub use conversation_manager::NewConversation;
+pub use tools::executor::{DynToolExecutor, ToolExecutor};
+pub use tools::runtimes::apply_patch::ApplyPatchRequest;
+pub use tools::runtimes::shell::ShellRequest;
+pub use tools::sandboxing::{SandboxAttempt, ToolCtx, ToolError};
 // Re-export common auth types for workspace consumers
 pub use auth::AuthManager;
 pub use auth::CodexAuth;
