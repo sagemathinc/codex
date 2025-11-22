@@ -13,7 +13,7 @@ use anyhow::Result;
 pub use parser::Hunk;
 pub use parser::ParseError;
 use parser::ParseError::*;
-use parser::UpdateFileChunk;
+pub use parser::UpdateFileChunk;
 pub use parser::parse_patch;
 use similar::TextDiff;
 use thiserror::Error;
@@ -656,6 +656,18 @@ fn derive_new_contents_from_chunks(
         }
     };
 
+    let new_contents = apply_chunks_to_contents(&original_contents, path, chunks)?;
+    Ok(AppliedPatch {
+        original_contents,
+        new_contents,
+    })
+}
+
+fn apply_chunks_internal(
+    original_contents: &str,
+    path: &Path,
+    chunks: &[UpdateFileChunk],
+) -> std::result::Result<String, ApplyPatchError> {
     let mut original_lines: Vec<String> = original_contents.split('\n').map(String::from).collect();
 
     // Drop the trailing empty element that results from the final newline so
@@ -670,11 +682,15 @@ fn derive_new_contents_from_chunks(
     if !new_lines.last().is_some_and(String::is_empty) {
         new_lines.push(String::new());
     }
-    let new_contents = new_lines.join("\n");
-    Ok(AppliedPatch {
-        original_contents,
-        new_contents,
-    })
+    Ok(new_lines.join("\n"))
+}
+
+pub fn apply_chunks_to_contents(
+    original_contents: &str,
+    path: &Path,
+    chunks: &[UpdateFileChunk],
+) -> std::result::Result<String, ApplyPatchError> {
+    apply_chunks_internal(original_contents, path, chunks)
 }
 
 /// Compute a list of replacements needed to transform `original_lines` into the

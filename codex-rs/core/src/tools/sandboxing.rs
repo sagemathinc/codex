@@ -14,6 +14,7 @@ use crate::sandboxing::SandboxManager;
 use crate::sandboxing::SandboxTransformError;
 use crate::state::SessionServices;
 use codex_protocol::protocol::AskForApproval;
+use codex_protocol::ConversationId;
 use codex_protocol::protocol::ReviewDecision;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -189,6 +190,12 @@ pub struct ToolCtx<'a> {
     pub(crate) turn: &'a TurnContext,
     pub call_id: String,
     pub tool_name: String,
+}
+
+impl<'a> ToolCtx<'a> {
+    pub fn conversation_id(&self) -> ConversationId {
+        self.session.conversation_id()
+    }
 }
 
 /// Captures the command metadata needed to re-run a tool request without sandboxing.

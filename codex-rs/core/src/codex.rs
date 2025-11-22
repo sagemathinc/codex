@@ -395,6 +395,9 @@ pub(crate) struct SessionSettingsUpdate {
 }
 
 impl Session {
+    pub fn conversation_id(&self) -> ConversationId {
+        self.conversation_id
+    }
     fn make_turn_context(
         auth_manager: Option<Arc<AuthManager>>,
         otel_event_manager: &OtelEventManager,
