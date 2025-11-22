@@ -11,6 +11,8 @@ use crate::protocol::Event;
 use crate::protocol::EventMsg;
 use crate::protocol::SessionConfiguredEvent;
 use crate::rollout::RolloutRecorder;
+use crate::tools::executor::default_tool_executor;
+use crate::tools::executor::DynToolExecutor;
 use codex_protocol::ConversationId;
 use codex_protocol::items::TurnItem;
 use codex_protocol::models::ResponseItem;
@@ -36,23 +38,38 @@ pub struct ConversationManager {
     conversations: Arc<RwLock<HashMap<ConversationId, Arc<CodexConversation>>>>,
     auth_manager: Arc<AuthManager>,
     session_source: SessionSource,
+    tool_executor: DynToolExecutor,
 }
 
 impl ConversationManager {
     pub fn new(auth_manager: Arc<AuthManager>, session_source: SessionSource) -> Self {
+        Self::with_tool_executor(
+            auth_manager,
+            session_source,
+            default_tool_executor(),
+        )
+    }
+
+    pub fn with_tool_executor(
+        auth_manager: Arc<AuthManager>,
+        session_source: SessionSource,
+        tool_executor: DynToolExecutor,
+    ) -> Self {
         Self {
             conversations: Arc::new(RwLock::new(HashMap::new())),
             auth_manager,
             session_source,
+            tool_executor,
         }
     }
 
     /// Construct with a dummy AuthManager containing the provided CodexAuth.
     /// Used for integration tests: should not be used by ordinary business logic.
     pub fn with_auth(auth: CodexAuth) -> Self {
-        Self::new(
+        Self::with_tool_executor(
             crate::AuthManager::from_auth_for_testing(auth),
             SessionSource::Exec,
+            default_tool_executor(),
         )
     }
 
@@ -74,6 +91,7 @@ impl ConversationManager {
             auth_manager,
             InitialHistory::New,
             self.session_source.clone(),
+            self.tool_executor.clone(),
         )
         .await?;
         self.finalize_spawn(codex, conversation_id).await
@@ -150,6 +168,7 @@ impl ConversationManager {
             auth_manager,
             initial_history,
             self.session_source.clone(),
+            self.tool_executor.clone(),
         )
         .await?;
         self.finalize_spawn(codex, conversation_id).await
@@ -185,7 +204,14 @@ impl ConversationManager {
         let CodexSpawnOk {
             codex,
             conversation_id,
-        } = Codex::spawn(config, auth_manager, history, self.session_source.clone()).await?;
+        } = Codex::spawn(
+            config,
+            auth_manager,
+            history,
+            self.session_source.clone(),
+            self.tool_executor.clone(),
+        )
+        .await?;
 
         self.finalize_spawn(codex, conversation_id).await
     }

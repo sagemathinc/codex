@@ -88,7 +88,7 @@ pub(crate) struct ApprovalCtx<'a> {
 
 // Specifies what tool orchestrator should do with a given tool call.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum ApprovalRequirement {
+pub enum ApprovalRequirement {
     /// No approval required for this tool call
     Skip,
     /// Approval required for this tool call
@@ -172,9 +172,9 @@ pub(crate) trait Sandboxable {
     }
 }
 
-pub(crate) struct ToolCtx<'a> {
-    pub session: &'a Session,
-    pub turn: &'a TurnContext,
+pub struct ToolCtx<'a> {
+    pub(crate) session: &'a Session,
+    pub(crate) turn: &'a TurnContext,
     pub call_id: String,
     pub tool_name: String,
 }
@@ -191,7 +191,7 @@ pub(crate) trait ProvidesSandboxRetryData {
 }
 
 #[derive(Debug)]
-pub(crate) enum ToolError {
+pub enum ToolError {
     Rejected(String),
     Codex(CodexErr),
 }
@@ -205,16 +205,16 @@ pub(crate) trait ToolRuntime<Req, Out>: Approvable<Req> + Sandboxable {
     ) -> Result<Out, ToolError>;
 }
 
-pub(crate) struct SandboxAttempt<'a> {
-    pub sandbox: crate::exec::SandboxType,
-    pub policy: &'a crate::protocol::SandboxPolicy,
+pub struct SandboxAttempt<'a> {
+    pub(crate) sandbox: crate::exec::SandboxType,
+    pub(crate) policy: &'a crate::protocol::SandboxPolicy,
     pub(crate) manager: &'a SandboxManager,
     pub(crate) sandbox_cwd: &'a Path,
-    pub codex_linux_sandbox_exe: Option<&'a std::path::PathBuf>,
+    pub(crate) codex_linux_sandbox_exe: Option<&'a std::path::PathBuf>,
 }
 
 impl<'a> SandboxAttempt<'a> {
-    pub fn env_for(
+    pub(crate) fn env_for(
         &self,
         spec: CommandSpec,
     ) -> Result<crate::sandboxing::ExecEnv, SandboxTransformError> {

@@ -68,6 +68,8 @@ use crate::error::CodexErr;
 use crate::error::Result as CodexResult;
 #[cfg(test)]
 use crate::exec::StreamOutput;
+#[cfg(test)]
+use crate::tools::executor::default_tool_executor;
 use crate::mcp::auth::compute_auth_statuses;
 use crate::mcp_connection_manager::McpConnectionManager;
 use crate::model_family::find_family_for_model;
@@ -108,6 +110,7 @@ use crate::tasks::ReviewTask;
 use crate::tasks::SessionTask;
 use crate::tasks::SessionTaskContext;
 use crate::tools::ToolRouter;
+use crate::tools::executor::DynToolExecutor;
 use crate::tools::context::SharedTurnDiffTracker;
 use crate::tools::parallel::ToolCallRuntime;
 use crate::tools::sandboxing::ApprovalStore;
@@ -160,6 +163,7 @@ impl Codex {
         auth_manager: Arc<AuthManager>,
         conversation_history: InitialHistory,
         session_source: SessionSource,
+        tool_executor: DynToolExecutor,
     ) -> CodexResult<CodexSpawnOk> {
         let (tx_sub, rx_sub) = async_channel::bounded(SUBMISSION_CHANNEL_CAPACITY);
         let (tx_event, rx_event) = async_channel::unbounded();
@@ -199,6 +203,7 @@ impl Codex {
             tx_event.clone(),
             conversation_history,
             session_source_clone,
+            tool_executor,
         )
         .await
         .map_err(|e| {
@@ -455,6 +460,7 @@ impl Session {
         tx_event: Sender<Event>,
         initial_history: InitialHistory,
         session_source: SessionSource,
+        tool_executor: DynToolExecutor,
     ) -> anyhow::Result<Arc<Self>> {
         debug!(
             "Configuring session: model={}; provider={:?}",
@@ -565,6 +571,7 @@ impl Session {
             auth_manager: Arc::clone(&auth_manager),
             otel_event_manager,
             tool_approvals: Mutex::new(ApprovalStore::default()),
+            tool_executor,
         };
 
         let sess = Arc::new(Session {
@@ -2633,6 +2640,7 @@ mod tests {
             auth_manager: Arc::clone(&auth_manager),
             otel_event_manager: otel_event_manager.clone(),
             tool_approvals: Mutex::new(ApprovalStore::default()),
+            tool_executor: default_tool_executor(),
         };
 
         let turn_context = Session::make_turn_context(
@@ -2711,6 +2719,7 @@ mod tests {
             auth_manager: Arc::clone(&auth_manager),
             otel_event_manager: otel_event_manager.clone(),
             tool_approvals: Mutex::new(ApprovalStore::default()),
+            tool_executor: default_tool_executor(),
         };
 
         let turn_context = Arc::new(Session::make_turn_context(

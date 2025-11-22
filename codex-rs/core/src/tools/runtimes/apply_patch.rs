@@ -4,10 +4,7 @@
 //! decision to avoid re-prompting, builds the self-invocation command for
 //! `codex --codex-run-as-apply-patch`, and runs under the current
 //! `SandboxAttempt` with a minimal environment.
-use crate::CODEX_APPLY_PATCH_ARG1;
 use crate::exec::ExecToolCallOutput;
-use crate::sandboxing::CommandSpec;
-use crate::sandboxing::execute_env;
 use crate::tools::sandboxing::Approvable;
 use crate::tools::sandboxing::ApprovalCtx;
 use crate::tools::sandboxing::ProvidesSandboxRetryData;
@@ -22,7 +19,6 @@ use crate::tools::sandboxing::with_cached_approval;
 use codex_protocol::protocol::AskForApproval;
 use codex_protocol::protocol::ReviewDecision;
 use futures::future::BoxFuture;
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
@@ -54,34 +50,6 @@ impl ApplyPatchRuntime {
         Self
     }
 
-    fn build_command_spec(req: &ApplyPatchRequest) -> Result<CommandSpec, ToolError> {
-        use std::env;
-        let exe = if let Some(path) = &req.codex_exe {
-            path.clone()
-        } else {
-            env::current_exe()
-                .map_err(|e| ToolError::Rejected(format!("failed to determine codex exe: {e}")))?
-        };
-        let program = exe.to_string_lossy().to_string();
-        Ok(CommandSpec {
-            program,
-            args: vec![CODEX_APPLY_PATCH_ARG1.to_string(), req.patch.clone()],
-            cwd: req.cwd.clone(),
-            expiration: req.timeout_ms.into(),
-            // Run apply_patch with a minimal environment for determinism and to avoid leaks.
-            env: HashMap::new(),
-            with_escalated_permissions: None,
-            justification: None,
-        })
-    }
-
-    fn stdout_stream(ctx: &ToolCtx<'_>) -> Option<crate::exec::StdoutStream> {
-        Some(crate::exec::StdoutStream {
-            sub_id: ctx.turn.sub_id.clone(),
-            call_id: ctx.call_id.clone(),
-            tx_event: ctx.session.get_tx_event(),
-        })
-    }
 }
 
 impl Sandboxable for ApplyPatchRuntime {
@@ -151,13 +119,7 @@ impl ToolRuntime<ApplyPatchRequest, ExecToolCallOutput> for ApplyPatchRuntime {
         attempt: &SandboxAttempt<'_>,
         ctx: &ToolCtx<'_>,
     ) -> Result<ExecToolCallOutput, ToolError> {
-        let spec = Self::build_command_spec(req)?;
-        let env = attempt
-            .env_for(spec)
-            .map_err(|err| ToolError::Codex(err.into()))?;
-        let out = execute_env(env, attempt.policy, Self::stdout_stream(ctx))
-            .await
-            .map_err(ToolError::Codex)?;
-        Ok(out)
+        let executor = ctx.session.services.tool_executor.clone();
+        executor.run_apply_patch(req, attempt, ctx).await
     }
 }

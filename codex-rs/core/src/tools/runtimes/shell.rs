@@ -4,9 +4,6 @@ Runtime: shell
 Executes shell requests under the orchestrator: asks for approval when needed,
 builds a CommandSpec, and runs it under the current SandboxAttempt.
 */
-use crate::exec::ExecToolCallOutput;
-use crate::sandboxing::execute_env;
-use crate::tools::runtimes::build_command_spec;
 use crate::tools::sandboxing::Approvable;
 use crate::tools::sandboxing::ApprovalCtx;
 use crate::tools::sandboxing::ApprovalRequirement;
@@ -20,6 +17,7 @@ use crate::tools::sandboxing::ToolError;
 use crate::tools::sandboxing::ToolRuntime;
 use crate::tools::sandboxing::with_cached_approval;
 use codex_protocol::protocol::ReviewDecision;
+use crate::exec::ExecToolCallOutput;
 use futures::future::BoxFuture;
 use std::path::PathBuf;
 
@@ -56,14 +54,6 @@ pub(crate) struct ApprovalKey {
 impl ShellRuntime {
     pub fn new() -> Self {
         Self
-    }
-
-    fn stdout_stream(ctx: &ToolCtx<'_>) -> Option<crate::exec::StdoutStream> {
-        Some(crate::exec::StdoutStream {
-            sub_id: ctx.turn.sub_id.clone(),
-            call_id: ctx.call_id.clone(),
-            tx_event: ctx.session.get_tx_event(),
-        })
     }
 }
 
@@ -129,20 +119,7 @@ impl ToolRuntime<ShellRequest, ExecToolCallOutput> for ShellRuntime {
         attempt: &SandboxAttempt<'_>,
         ctx: &ToolCtx<'_>,
     ) -> Result<ExecToolCallOutput, ToolError> {
-        let spec = build_command_spec(
-            &req.command,
-            &req.cwd,
-            &req.env,
-            req.timeout_ms.into(),
-            req.with_escalated_permissions,
-            req.justification.clone(),
-        )?;
-        let env = attempt
-            .env_for(spec)
-            .map_err(|err| ToolError::Codex(err.into()))?;
-        let out = execute_env(env, attempt.policy, Self::stdout_stream(ctx))
-            .await
-            .map_err(ToolError::Codex)?;
-        Ok(out)
+        let executor = ctx.session.services.tool_executor.clone();
+        executor.run_shell(req, attempt, ctx).await
     }
 }
