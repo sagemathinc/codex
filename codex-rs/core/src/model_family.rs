@@ -199,6 +199,7 @@ pub fn find_family_for_model(slug: &str) -> Option<ModelFamily> {
             supports_parallel_tool_calls: true,
             support_verbosity: false,
             truncation_policy: TruncationPolicy::Tokens(10_000),
+            experimental_supported_tools: vec!["read_file".to_string()],
         )
     } else if slug.starts_with("gpt-5-codex")
         || slug.starts_with("gpt-5.1-codex")
@@ -214,6 +215,7 @@ pub fn find_family_for_model(slug: &str) -> Option<ModelFamily> {
             supports_parallel_tool_calls: true,
             support_verbosity: false,
             truncation_policy: TruncationPolicy::Tokens(10_000),
+            experimental_supported_tools: vec!["read_file".to_string()],
         )
     } else if slug.starts_with("gpt-5.1") {
         model_family!(
@@ -227,6 +229,7 @@ pub fn find_family_for_model(slug: &str) -> Option<ModelFamily> {
             truncation_policy: TruncationPolicy::Bytes(10_000),
             shell_type: ConfigShellToolType::ShellCommand,
             supports_parallel_tool_calls: true,
+            experimental_supported_tools: vec!["read_file".to_string()],
         )
     } else if slug.starts_with("gpt-5") {
         model_family!(
@@ -236,6 +239,7 @@ pub fn find_family_for_model(slug: &str) -> Option<ModelFamily> {
             shell_type: ConfigShellToolType::Default,
             support_verbosity: true,
             truncation_policy: TruncationPolicy::Bytes(10_000),
+            experimental_supported_tools: vec!["read_file".to_string()],
         )
     } else {
         None
