@@ -61,10 +61,13 @@ pub mod review_format;
 pub use codex_protocol::protocol::InitialHistory;
 pub use conversation_manager::ConversationManager;
 pub use conversation_manager::NewConversation;
+pub use tools::context::{ToolInvocation, ToolOutput, ToolPayload};
 pub use tools::executor::{DynToolExecutor, ToolExecutor};
 pub use tools::runtimes::apply_patch::ApplyPatchRequest;
 pub use tools::runtimes::shell::ShellRequest;
 pub use tools::sandboxing::{SandboxAttempt, ToolCtx, ToolError};
+pub use tools::spec::register_external_tool_handler;
+pub use tools::registry::{ToolHandler, ToolKind};
 // Re-export common auth types for workspace consumers
 pub use auth::AuthManager;
 pub use auth::CodexAuth;
@@ -100,6 +103,7 @@ pub mod util;
 
 pub use apply_patch::CODEX_APPLY_PATCH_ARG1;
 pub use command_safety::is_safe_command;
+pub use function_tool::FunctionCallError;
 pub use safety::get_platform_sandbox;
 pub use safety::set_windows_sandbox_enabled;
 // Re-export the protocol types from the standalone `codex-protocol` crate so existing
