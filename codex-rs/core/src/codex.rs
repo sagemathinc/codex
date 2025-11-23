@@ -71,8 +71,6 @@ use crate::error::CodexErr;
 use crate::error::Result as CodexResult;
 #[cfg(test)]
 use crate::exec::StreamOutput;
-#[cfg(test)]
-use crate::tools::executor::default_tool_executor;
 use crate::mcp::auth::compute_auth_statuses;
 use crate::mcp_connection_manager::McpConnectionManager;
 use crate::model_family::find_family_for_model;
@@ -113,8 +111,10 @@ use crate::tasks::ReviewTask;
 use crate::tasks::SessionTask;
 use crate::tasks::SessionTaskContext;
 use crate::tools::ToolRouter;
-use crate::tools::executor::DynToolExecutor;
 use crate::tools::context::SharedTurnDiffTracker;
+use crate::tools::executor::DynToolExecutor;
+#[cfg(test)]
+use crate::tools::executor::default_tool_executor;
 use crate::tools::parallel::ToolCallRuntime;
 use crate::tools::sandboxing::ApprovalStore;
 use crate::tools::spec::ToolsConfig;

@@ -4,6 +4,7 @@ Runtime: shell
 Executes shell requests under the orchestrator: asks for approval when needed,
 builds a CommandSpec, and runs it under the current SandboxAttempt.
 */
+use crate::exec::ExecToolCallOutput;
 use crate::tools::sandboxing::Approvable;
 use crate::tools::sandboxing::ApprovalCtx;
 use crate::tools::sandboxing::ApprovalRequirement;
@@ -18,7 +19,6 @@ use crate::tools::sandboxing::ToolError;
 use crate::tools::sandboxing::ToolRuntime;
 use crate::tools::sandboxing::with_cached_approval;
 use codex_protocol::protocol::ReviewDecision;
-use crate::exec::ExecToolCallOutput;
 use futures::future::BoxFuture;
 use std::path::PathBuf;
 

@@ -11,8 +11,8 @@ use crate::protocol::Event;
 use crate::protocol::EventMsg;
 use crate::protocol::SessionConfiguredEvent;
 use crate::rollout::RolloutRecorder;
-use crate::tools::executor::default_tool_executor;
 use crate::tools::executor::DynToolExecutor;
+use crate::tools::executor::default_tool_executor;
 use codex_protocol::ConversationId;
 use codex_protocol::items::TurnItem;
 use codex_protocol::models::ResponseItem;
@@ -43,11 +43,7 @@ pub struct ConversationManager {
 
 impl ConversationManager {
     pub fn new(auth_manager: Arc<AuthManager>, session_source: SessionSource) -> Self {
-        Self::with_tool_executor(
-            auth_manager,
-            session_source,
-            default_tool_executor(),
-        )
+        Self::with_tool_executor(auth_manager, session_source, default_tool_executor())
     }
 
     pub fn with_tool_executor(

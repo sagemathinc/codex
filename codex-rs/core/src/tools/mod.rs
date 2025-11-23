@@ -1,9 +1,9 @@
 pub mod context;
 pub mod events;
+pub mod executor;
 pub(crate) mod handlers;
 pub mod orchestrator;
 pub mod parallel;
-pub mod executor;
 pub mod registry;
 pub mod router;
 pub mod runtimes;

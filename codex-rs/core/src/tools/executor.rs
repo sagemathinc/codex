@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
+use crate::CODEX_APPLY_PATCH_ARG1;
 use crate::exec::ExecToolCallOutput;
 use crate::exec::StdoutStream;
 use crate::sandboxing::CommandSpec;
@@ -13,7 +14,6 @@ use crate::tools::runtimes::shell::ShellRequest;
 use crate::tools::sandboxing::SandboxAttempt;
 use crate::tools::sandboxing::ToolCtx;
 use crate::tools::sandboxing::ToolError;
-use crate::CODEX_APPLY_PATCH_ARG1;
 
 pub type DynToolExecutor = Arc<dyn ToolExecutor>;
 

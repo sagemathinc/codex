@@ -7,13 +7,15 @@ use crate::tools::handlers::PLAN_TOOL;
 use crate::tools::handlers::apply_patch::ApplyPatchToolType;
 use crate::tools::handlers::apply_patch::create_apply_patch_freeform_tool;
 use crate::tools::handlers::apply_patch::create_apply_patch_json_tool;
-use crate::tools::registry::ToolRegistryBuilder;
+use crate::tools::registry::{ToolHandler, ToolRegistryBuilder};
+use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value as JsonValue;
 use serde_json::json;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ConfigShellToolType {
@@ -985,7 +987,6 @@ pub(crate) fn build_specs(
     use crate::tools::handlers::TestSyncHandler;
     use crate::tools::handlers::UnifiedExecHandler;
     use crate::tools::handlers::ViewImageHandler;
-    use std::sync::Arc;
 
     let mut builder = ToolRegistryBuilder::new();
 
@@ -1064,7 +1065,10 @@ pub(crate) fn build_specs(
     {
         let read_file_handler = Arc::new(ReadFileHandler);
         builder.push_spec_with_parallel_support(create_read_file_tool(), true);
-        builder.register_handler("read_file", read_file_handler);
+        builder.register_handler(
+            "read_file",
+            maybe_override_handler("read_file", read_file_handler),
+        );
     }
 
     if config
@@ -1113,6 +1117,25 @@ pub(crate) fn build_specs(
     }
 
     builder
+}
+
+static EXTERNAL_TOOL_HANDLERS: Lazy<RwLock<HashMap<String, Arc<dyn ToolHandler>>>> =
+    Lazy::new(|| RwLock::new(HashMap::new()));
+
+fn maybe_override_handler(name: &str, default: Arc<dyn ToolHandler>) -> Arc<dyn ToolHandler> {
+    EXTERNAL_TOOL_HANDLERS
+        .read()
+        .expect("external tool handler lock poisoned")
+        .get(name)
+        .cloned()
+        .unwrap_or(default)
+}
+
+pub fn register_external_tool_handler(name: impl Into<String>, handler: Arc<dyn ToolHandler>) {
+    EXTERNAL_TOOL_HANDLERS
+        .write()
+        .expect("external tool handler lock poisoned")
+        .insert(name.into(), handler);
 }
 
 #[cfg(test)]

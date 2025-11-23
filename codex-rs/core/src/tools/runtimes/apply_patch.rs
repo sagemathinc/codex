@@ -49,7 +49,6 @@ impl ApplyPatchRuntime {
     pub fn new() -> Self {
         Self
     }
-
 }
 
 impl Sandboxable for ApplyPatchRuntime {
