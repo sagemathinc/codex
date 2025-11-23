@@ -8,6 +8,7 @@ use codex_protocol::models::FunctionCallOutputContentItem;
 use codex_protocol::models::FunctionCallOutputPayload;
 use codex_protocol::models::ResponseInputItem;
 use codex_protocol::models::ShellToolCallParams;
+use codex_protocol::ConversationId;
 use codex_utils_string::take_bytes_at_char_boundary;
 use mcp_types::CallToolResult;
 use std::borrow::Cow;
@@ -24,6 +25,12 @@ pub struct ToolInvocation {
     pub call_id: String,
     pub tool_name: String,
     pub payload: ToolPayload,
+}
+
+impl ToolInvocation {
+    pub fn conversation_id(&self) -> ConversationId {
+        self.session.conversation_id()
+    }
 }
 
 #[derive(Clone)]
