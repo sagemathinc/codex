@@ -17,7 +17,7 @@ use crate::tools::sandboxing::ToolError;
 
 pub type DynToolExecutor = Arc<dyn ToolExecutor>;
 
-pub(crate) fn default_tool_executor() -> DynToolExecutor {
+pub fn default_tool_executor() -> DynToolExecutor {
     Arc::new(DefaultToolExecutor::default())
 }
 

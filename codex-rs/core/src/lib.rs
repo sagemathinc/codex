@@ -62,7 +62,7 @@ pub use codex_protocol::protocol::InitialHistory;
 pub use conversation_manager::ConversationManager;
 pub use conversation_manager::NewConversation;
 pub use tools::context::{ToolInvocation, ToolOutput, ToolPayload};
-pub use tools::executor::{DynToolExecutor, ToolExecutor};
+pub use tools::executor::{default_tool_executor, DynToolExecutor, ToolExecutor};
 pub use tools::runtimes::apply_patch::ApplyPatchRequest;
 pub use tools::runtimes::shell::ShellRequest;
 pub use tools::sandboxing::{SandboxAttempt, ToolCtx, ToolError};
