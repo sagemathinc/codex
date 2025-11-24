@@ -1,3 +1,14 @@
+## CoCalc Fork-specific changes
+
+- Thread a configurable `ToolExecutor` through `Codex::spawn`, `ConversationManager`, and `SessionServices`, and export `default_tool_executor` so downstream adapters can swap in custom shell/apply_patch implementations.
+- Expose `ToolInvocation`, `ToolCtx`, `ToolPayload`, `SandboxAttempt`, `ToolError`, and `FunctionCallError` (with helpers such as `conversation_id()`) so external executors know which conversation/session and approval context they are serving.
+- Introduce `register_external_tool_handler` and expose the handler registry so forks can override built-in tools like `read_file` while still using Codex's tool routing.
+- Enable GPT-5/GPT-5.1 model families to advertise the experimental `read_file` tool, giving ACP clients parity with Codex's filesystem access UX.
+- Expand the `codex-apply-patch` crate by exporting `UpdateFileChunk` and `apply_chunks_to_contents` so remote executors can apply patches entirely in memory without launching `codex`.
+- Add public APIs for ACP needs (conversation IDs on `ToolInvocation`/`Session`, approval enums, shell request exports, etc.) making codex-core embeddable inside the ACP adapter.
+
+# Original Readme Below
+
 <p align="center"><code>npm i -g @openai/codex</code><br />or <code>brew install --cask codex</code></p>
 
 <p align="center"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer.
