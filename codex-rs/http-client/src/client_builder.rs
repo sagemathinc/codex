@@ -39,6 +39,7 @@ pub struct HttpClientBuilder {
     follow_redirects: bool,
     pub(crate) redirect_observed: Option<Arc<AtomicBool>>,
     connect_timeout: Option<Duration>,
+    tcp_user_timeout: Option<Duration>,
     chatgpt_cloudflare_cookie_store: bool,
     chatgpt_cookie_store: Option<Arc<ChatGptCookieStore>>,
     pub(crate) request_logging: RequestLogging,
@@ -142,6 +143,11 @@ impl HttpClientBuilder {
     /// Limits only connection establishment, not the request as a whole.
     pub fn connect_timeout(mut self, timeout: Duration) -> Self {
         self.connect_timeout = Some(timeout);
+        self
+    }
+
+    pub fn tcp_user_timeout(mut self, timeout: Duration) -> Self {
+        self.tcp_user_timeout = Some(timeout);
         self
     }
 
@@ -382,6 +388,10 @@ impl HttpClientBuilder {
         if let Some(connect_timeout) = self.connect_timeout {
             builder = builder.connect_timeout(connect_timeout);
         }
+        #[cfg(any(target_os = "linux", target_os = "android", target_os = "fuchsia"))]
+        if let Some(tcp_user_timeout) = self.tcp_user_timeout {
+            builder = builder.tcp_user_timeout(tcp_user_timeout);
+        }
         if self.chatgpt_cloudflare_cookie_store {
             builder = match self.chatgpt_cookie_store {
                 Some(store) => builder.cookie_provider(store),
@@ -400,6 +410,7 @@ impl Default for HttpClientBuilder {
             follow_redirects: true,
             redirect_observed: None,
             connect_timeout: None,
+            tcp_user_timeout: None,
             chatgpt_cloudflare_cookie_store: false,
             chatgpt_cookie_store: None,
             request_logging: RequestLogging::Enabled,

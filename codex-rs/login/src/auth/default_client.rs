@@ -20,6 +20,7 @@ use http::header::USER_AGENT;
 use std::sync::LazyLock;
 use std::sync::Mutex;
 use std::sync::RwLock;
+use std::time::Duration;
 
 use crate::outbound_proxy::AuthRouteConfig;
 
@@ -41,6 +42,8 @@ use crate::outbound_proxy::AuthRouteConfig;
 pub static USER_AGENT_SUFFIX: LazyLock<Mutex<Option<String>>> = LazyLock::new(|| Mutex::new(None));
 pub const DEFAULT_ORIGINATOR: &str = "codex_cli_rs";
 pub const CODEX_INTERNAL_ORIGINATOR_OVERRIDE_ENV_VAR: &str = "CODEX_INTERNAL_ORIGINATOR_OVERRIDE";
+pub const CODEX_TCP_USER_TIMEOUT_MS_ENV_VAR: &str = "CODEX_TCP_USER_TIMEOUT_MS";
+const DEFAULT_TCP_USER_TIMEOUT_MS: u64 = 300_000;
 pub use codex_model_provider_info::RESIDENCY_HEADER_NAME;
 pub use codex_model_provider_info::ResidencyRequirement;
 pub use codex_model_provider_info::read_managed_residency_requirement as read_default_client_residency_requirement;
@@ -414,9 +417,43 @@ pub async fn create_transport_for_routes_async(
 }
 
 fn default_http_client_builder() -> HttpClientBuilder {
-    HttpClientBuilder::new()
+    let mut builder = HttpClientBuilder::new()
         .default_headers(default_headers())
-        .with_chatgpt_cloudflare_cookie_store()
+        .with_chatgpt_cloudflare_cookie_store();
+    if let Some(timeout) = tcp_user_timeout() {
+        builder = builder.tcp_user_timeout(timeout);
+    }
+    builder
+}
+
+fn tcp_user_timeout() -> Option<Duration> {
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "fuchsia"))]
+    {
+        let timeout_ms = std::env::var(CODEX_TCP_USER_TIMEOUT_MS_ENV_VAR)
+            .ok()
+            .and_then(|value| {
+                let trimmed = value.trim();
+                match trimmed.parse::<u64>() {
+                    Ok(ms) if ms > 0 => Some(ms),
+                    Ok(_) => None,
+                    Err(err) => {
+                        tracing::warn!(
+                            env_var = CODEX_TCP_USER_TIMEOUT_MS_ENV_VAR,
+                            value = trimmed,
+                            error = %err,
+                            "ignoring invalid tcp_user_timeout override"
+                        );
+                        None
+                    }
+                }
+            })
+            .unwrap_or(DEFAULT_TCP_USER_TIMEOUT_MS);
+        Some(Duration::from_millis(timeout_ms))
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "android", target_os = "fuchsia")))]
+    {
+        None
+    }
 }
 
 // These legacy constructors intentionally preserve the infallible behavior of `create_client`.
