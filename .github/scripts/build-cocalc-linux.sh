@@ -36,11 +36,11 @@ test -n "${RUSTY_V8_ARCHIVE:-}"
 test -n "${RUSTY_V8_SRC_BINDING_PATH:-}"
 export STABLE_GIT_COMMIT="$(git rev-parse HEAD)"
 cd codex-rs
-cargo build --locked --release --target "$target" --bin bwrap
+cargo build --locked --release --target "$target" -p codex-bwrap --bin bwrap
 release="${CARGO_TARGET_DIR:-target}/$target/release"
 "$strip_tool" --strip-debug --strip-unneeded "$release/bwrap"
 export CODEX_BWRAP_SHA256="$(sha256sum "$release/bwrap" | cut -d ' ' -f 1)"
-cargo build --locked --release --target "$target" --bin codex --bin codex-code-mode-host
+cargo build --locked --release --target "$target" -p codex-cli -p codex-code-mode-host --bin codex --bin codex-code-mode-host
 dest="$root/dist-cocalc"
 mkdir -p "$dest"
 for binary in codex codex-code-mode-host bwrap; do

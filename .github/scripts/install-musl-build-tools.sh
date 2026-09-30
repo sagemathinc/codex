@@ -69,6 +69,7 @@ if [[ ! -f "${libcap_prefix}/lib/libcap.a" ]]; then
   tar -xJf "${libcap_tarball}" -C "${libcap_src_root}"
   libcap_source_dir="${libcap_src_root}/libcap-${libcap_version}"
   make -C "${libcap_source_dir}/libcap" -j"$(nproc)" \
+    libcap.a BUILD_CC="${BUILD_CC:-cc}" \
     CC="${musl_linker}" \
     AR=ar \
     RANLIB=ranlib
