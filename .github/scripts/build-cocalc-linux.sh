@@ -22,6 +22,7 @@ export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-6}"
 export CARGO_PROFILE_RELEASE_DEBUG=0
 export CARGO_INCREMENTAL=0
 cd "$root"
+export CODEX_REPO_ROOT="$root"
 while IFS= read -r line; do export "$line"; done < <(
   python3 - "$target" <<'PY'
 import sys
